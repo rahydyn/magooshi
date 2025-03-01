@@ -20,7 +20,7 @@ import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 const UploadVideo = () => {
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [uploadProgress, setUploadProgress] = useState(0)
-  const [extractedFrames, setExtractedFrames] = useState<string[]>([])
+  // const [extractedFrames, setExtractedFrames] = useState<string[]>([])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -88,14 +88,14 @@ const UploadVideo = () => {
             <Progress value={uploadProgress} className="w-full" />
           )}
           <div className="flex flex-wrap">
-            {extractedFrames.map((frame, index) => (
+            {/* {extractedFrames.map((frame, index) => (
               <img
                 key={index}
                 src={frame}
                 alt={`frame ${index}`}
                 className="w-32 h-24 object-cover m-1"
               />
-            ))}
+            ))} */}
           </div>
         </div>
       </CardContent>
