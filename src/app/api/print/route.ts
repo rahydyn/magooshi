@@ -42,7 +42,6 @@ export async function POST(request: Request) {
     )
     const accessToken = authResponse.data.access_token
     const deviceId = authResponse.data.subject_id
-    console.log('deviceId:', deviceId)
 
     // 2. 印刷設定
     const printSettingResponse = await axios.post(
@@ -60,41 +59,32 @@ export async function POST(request: Request) {
     )
     const printJobId = printSettingResponse.data.id
     const uploadUri = printSettingResponse.data.upload_uri
-    console.log('uploadUri:', uploadUri)
 
     // 3. 印刷ファイルのアップロード
-    const imageBuffer = await fs.readFile(imagePath, (err, data) => {
-      if (err) {
-        console.error('Error reading layout image:', err)
-        throw err
-      }
-      return data
-    })
+    const imageBuffer = await fs.readFile(imagePath)
     await axios.post(`${uploadUri}&File=1.jpg`, imageBuffer, {
       headers: {
         'Content-Type': 'application/octet-stream',
       },
     })
-    console.log('uploading...', printJobId)
 
     // 4. 印刷実行
-    await axios
-      .post(
-        `https://${host}/api/1/printing/printers/${deviceId}/jobs/${printJobId}/print`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      )
-      .then((res) => {
-        console.log(res.data)
-      })
-      .catch((err) => {
-        console.log(err)
-      })
-    console.log('uploaded:')
+    await axios.post(
+      `https://${host}/api/1/printing/printers/${deviceId}/jobs/${printJobId}/print`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    )
+    //   .then((res) => {
+    //     console.log(res.data)
+    //   })
+    //   .catch((err) => {
+    //     console.log(err)
+    //   })
+    // console.log('uploaded:')
 
     // res.status(200).json({ message: '印刷ジョブが正常に送信されました。' })
     return NextResponse.json(
