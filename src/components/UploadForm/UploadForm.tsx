@@ -68,48 +68,47 @@ const UploadForm: React.FC<UploadFormProps> = ({
     try {
       const formData = new FormData()
       const timestampData = new FormData()
+      const timestamp = Date.now()
+
       if (mode === 'video') {
-        formData.append('video', videoFile!)
+        // TODO: video処理
       } else {
+        // 画像をアップロード
         inputSets.forEach((set, index) => {
-          formData.append(`image-${index}`, set.imageFile!)
-          formData.append(`text-${index}`, set.text)
+          if (set.imageFile) {
+            formData.append(`image-${index}`, set.imageFile)
+            formData.append(`text-${index}`, set.text)
+          }
         })
         formData.append(`length`, inputSets.length.toString())
-      }
 
-      const endpoint =
-        mode === 'video' ? '/api/process-video' : '/api/process-image'
+        const endpoint = '/api/process-image' // 画像処理APIのエンドポイント
 
-      const timestamp = Date.now()
-      formData.append('timestamp', timestamp.toString())
-      timestampData.append('timestamp', timestamp.toString())
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        body: formData,
-      })
+        formData.append('timestamp', timestamp.toString())
+        timestampData.append('timestamp', timestamp.toString())
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          body: formData,
+        })
 
-      if (!response.ok) {
-        console.error('処理に失敗しました:', response)
-        alert('処理に失敗しました。')
-        return
-      }
+        if (!response.ok) {
+          console.error('処理に失敗しました:', response)
+          alert('処理に失敗しました。')
+          return
+        }
 
-      // /api/print API ルートを呼び出す
-      const printResponse = await fetch('/api/print', {
-        method: 'POST',
-        // headers: {
-        //   'Content-Type': 'application/json',
-        // },
-        body: timestampData,
-      })
-      console.log(printResponse)
+        // /api/print API ルートを呼び出す
+        const printResponse = await fetch('/api/print', {
+          method: 'POST',
+          body: timestampData,
+        })
 
-      if (printResponse.ok) {
-        onUploadSuccess()
-      } else {
-        console.error('処理に失敗しました:', printResponse)
-        alert('処理に失敗しました。')
+        if (printResponse.ok) {
+          onUploadSuccess()
+        } else {
+          console.error('処理に失敗しました:', printResponse)
+          alert('処理に失敗しました。')
+        }
       }
     } catch (error) {
       console.error('アップロード中にエラーが発生しました:', error)

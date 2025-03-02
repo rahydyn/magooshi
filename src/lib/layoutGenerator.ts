@@ -1,11 +1,23 @@
-import sharp from 'sharp'
 import path from 'path'
+import sharp from 'sharp'
 
 export const generateLayoutImage = async (
-  imagePaths: string[],
+  imageUrls: string[], // 画像URLの配列を受け取る
   textData: string[]
   //   timestamp: string
-): Promise<string> => {
+): Promise<Buffer> => {
+  // 画像の配置領域
+  const imagePositions = [
+    { left: 68, top: 322, width: 1254, height: 562 }, // index 0
+    { left: 860, top: 1044, width: 472, height: 242 }, // index 1
+  ]
+
+  // テキストの配置領域
+  const textPositions = [
+    { left: 68, top: 184, width: 1254, height: 562, fontSize: 48 }, // index 0 のテキスト
+    { left: 860, top: 1376, width: 472, height: 242, fontSize: 48 }, // index 1 のテキスト
+  ]
+
   try {
     sharp.cache(false)
     sharp.simd(false)
@@ -13,22 +25,10 @@ export const generateLayoutImage = async (
     const baseImage = sharp(
       path.join(process.cwd(), 'public', 'base_layout.png')
     )
-    const baseImageBuffer = await baseImage.toBuffer()
 
-    let layoutImage = sharp(baseImageBuffer)
+    let layoutImage = baseImage
 
-    // 画像の配置領域
-    const imagePositions = [
-      { left: 68, top: 322, width: 1254, height: 562 }, // index 0
-      { left: 860, top: 1044, width: 472, height: 242 }, // index 1
-    ]
-
-    const textPositions = [
-      { left: 68, top: 184, width: 1254, height: 562, fontSize: 48 }, // index 0 のテキスト
-      { left: 860, top: 1376, width: 472, height: 242, fontSize: 48 }, // index 1 のテキスト
-    ]
-
-    for (let i = 0; i < imagePaths.length && i < imagePositions.length; i++) {
+    for (let i = 0; i < imageUrls.length && i < imagePositions.length; i++) {
       const topTextBuffer = Buffer.from(
         `<svg width="${textPositions[i].width}" height="${
           textPositions[i].height
@@ -41,10 +41,16 @@ export const generateLayoutImage = async (
         </svg>`
       )
 
-      const resizedImage = sharp(imagePaths[i]).resize(
+      // Firebase Storage から画像を取得
+      const response = await fetch(imageUrls[i])
+      const arrayBuffer = await response.arrayBuffer() // ArrayBuffer に変換
+      const buffer = Buffer.from(arrayBuffer) // Buffer に変換
+      const resizedImage = sharp(buffer).resize(
         imagePositions[i].width,
         imagePositions[i].height,
-        { fit: 'cover' }
+        {
+          fit: 'cover',
+        }
       )
 
       const clonedLayoutImage = layoutImage.clone()
@@ -66,20 +72,7 @@ export const generateLayoutImage = async (
       layoutImage = await sharp(await clonedLayoutImage.toBuffer())
     }
 
-    const layoutImagePath = path.join(
-      process.cwd(),
-      'tmp',
-      `layout.jpg`
-      //   `${timestamp}_layout.jpg`
-    )
-
-    try {
-      await layoutImage.toFile(layoutImagePath)
-    } catch (error) {
-      console.error('Error saving layout image:', error)
-    }
-
-    return layoutImagePath
+    return await layoutImage.toBuffer() // Buffer を返す
   } catch (error) {
     console.error('Layout generation error:', error)
     throw error

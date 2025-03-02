@@ -1,70 +1,46 @@
 import { generateLayoutImage } from './layoutGenerator'
-import { uploadImageToStorage } from './firebaseStorageService'
+import {
+  uploadImageToStorage,
+  uploadTempImageToStorage,
+} from './firebaseStorageService'
 import sharp from 'sharp'
-import fs from 'fs/promises'
-import path from 'path'
 
 export const processImage = async (
   imageFiles: File[],
   texts: string[],
   timestamp: string
 ) => {
-  const timestamps: number[] = []
   try {
-    const imagePaths: string[] = [] // 処理後の画像パスを格納する配列
+    const imageUrls: string[] = [] // 処理後の画像のURLを格納する配列
 
     // 画像ファイルをループ処理
     for (const imageFile of imageFiles) {
-      const timestamp = Date.now()
-      timestamps.push(timestamp)
-      // アップロードされた画像を一時ファイルに保存
+      // 画像ファイルをsharpで処理し、一時ファイルとしてFirebase Storageにアップロード
       const buffer = await imageFile.arrayBuffer()
-      const tempFilePath = path.join(
-        process.cwd(),
-        'tmp',
-        `tmp_${timestamp}_${imageFile.name}` // ユニークな一時ファイルパス
+      const processedImageBuffer = await sharp(Buffer.from(buffer)).toBuffer()
+      const tempImageUrl = await uploadTempImageToStorage(
+        processedImageBuffer,
+        imageFile.name
       )
-      console.log('tempFilePath', tempFilePath)
-      await fs.writeFile(tempFilePath, Buffer.from(buffer))
 
-      // 画像ファイルをsharpで処理し、一時ファイルに保存
-      const processedImagePath = path.join(
-        process.cwd(),
-        'tmp',
-        `processed_${timestamp}_${imageFile.name}` // ユニークな処理後のファイルパス
-      )
-      console.log('processedImagePath', processedImagePath)
-      await sharp(tempFilePath).toFile(processedImagePath)
-
-      // 処理後の画像のパスを imagePaths に格納
-      imagePaths.push(processedImagePath)
+      // 処理後の画像のURLを imageUrls に格納
+      imageUrls.push(tempImageUrl)
     }
 
     // レイアウト生成
-    const layoutImagePath = await generateLayoutImage(
-      imagePaths,
+    const layoutImageBuffer = await generateLayoutImage(
+      imageUrls, // 画像URLの配列を渡す
       texts
       //   timestamp
     )
 
     // ストレージにアップロード
-    await uploadImageToStorage(layoutImagePath, `${timestamp}_newspaper.jpg`)
+    await uploadImageToStorage(
+      layoutImageBuffer, // Buffer を渡す
+      `newspaper/${timestamp}_newspaper.jpg`
+    )
 
-    // ループ内で生成された一時ファイルを削除
-    imageFiles.forEach(async (imageFile, index) => {
-      const tempFilePath = path.join(
-        process.cwd(),
-        'tmp',
-        `tmp_${timestamps[index]}_${imageFile.name}`
-      )
-      const processedImagePath = path.join(
-        process.cwd(),
-        'tmp',
-        `processed_${timestamps[index]}_${imageFile.name}`
-      )
-      await fs.unlink(tempFilePath)
-      await fs.unlink(processedImagePath)
-    })
+    // TODO: Firebase Storage の /tmp ディレクトリをクリーンアップする処理を追加
   } catch (error) {
     console.error('Image processing error:', error)
     throw error
