@@ -17,10 +17,10 @@ export const generateLayoutImage = async (
 
   // テキストの配置領域
   const textPositions = [
-    { left: 68, top: 184, width: 1254, height: 562, fontSize: 18 }, // index 0 のテキスト
-    { left: 860, top: 1376, width: 472, height: 242, fontSize: 11 }, // index 1 のテキスト
-    { left: 160, top: 1046, width: 510, height: 104, fontSize: 14 }, // index 2 のテキスト
-    { left: 880, top: 1750, width: 432, height: 192, fontSize: 11 }, // index 3 のテキスト
+    { left: 68, top: 184, width: 1254, height: 562, fontSize: 30 }, // index 0 のテキスト
+    { left: 860, top: 1376, width: 472, height: 242, fontSize: 22 }, // index 1 のテキスト
+    { left: 160, top: 1046, width: 510, height: 104, fontSize: 26 }, // index 2 のテキスト
+    { left: 880, top: 1750, width: 432, height: 192, fontSize: 22 }, // index 3 のテキスト
   ]
 
   try {
