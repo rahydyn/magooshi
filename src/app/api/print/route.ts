@@ -1,27 +1,26 @@
-import { NextResponse } from 'next/server'
+import { storage } from '@/lib/firebaseClient'
 import axios from 'axios'
-import fs from 'fs/promises'
-import path from 'path'
+import { getDownloadURL, ref } from 'firebase/storage'
+import { NextResponse } from 'next/server'
 
-export async function POST(request: Request) {
-  const clientId = process.env.CLIENT_ID // クライアントID
-  const clientSecret = process.env.CLIENT_SECRET // クライアントシークレット
-  const printerEmail = process.env.PRINTER_EMAIL // プリンターのメールアドレス
-  const host = 'api.epsonconnect.com' // Epson Connect APIのホスト名
-  if (request.method !== 'POST') {
-    return NextResponse.json(
-      { message: '印刷ジョブの送信中にエラーが発生しました。' },
-      { status: 405 }
-    )
-  }
+const clientId = process.env.CLIENT_ID // クライアントID
+const clientSecret = process.env.CLIENT_SECRET // クライアントシークレット
+const printerEmail = process.env.PRINTER_EMAIL // プリンターのメールアドレス
+const host = 'api.epsonconnect.com' // Epson Connect APIのホスト名
 
+export const POST = async (request: Request) => {
   try {
-    // const formData = await request.formData()
-    // const timestamp = formData.get('timestamp') // リクエストボディからタイムスタンプを取得
+    const formData = await request.formData()
+    const timestamp = formData.get('timestamp') as string
+    const imageName = `newspaper/${timestamp}_newspaper.jpg`
 
-    // const fileName = `${timestamp}_layout.jpg` // タイムスタンプを含めたファイル名
-    const fileName = `layout.jpg` // タイムスタンプを含めたファイル名
-    const imagePath = path.join(process.cwd(), 'tmp', fileName) // 画像のパス    console.log('imagePath:', imagePath)
+    // Firebase Storage から画像を取得
+    const imageRef = ref(storage, imageName)
+    // const [imageBuffer] = await imageRef.download()
+    const [imageBuffer] = await getDownloadURL(imageRef)
+
+    // Base64 エンコード
+    const base64Image = Buffer.from(imageBuffer).toString('base64')
 
     // 1. 認証
     const authResponse = await axios.post(
@@ -61,10 +60,9 @@ export async function POST(request: Request) {
     const uploadUri = printSettingResponse.data.upload_uri
 
     // 3. 印刷ファイルのアップロード
-    const imageBuffer = await fs.readFile(imagePath)
-    await axios.post(`${uploadUri}&File=1.jpg`, imageBuffer, {
+    await axios.post(`${uploadUri}&File=1.jpg`, base64Image, {
       headers: {
-        'Content-Type': 'application/octet-stream',
+        'Content-Type': 'image/jpeg', // Base64 エンコードされた画像データを送信
       },
     })
 
@@ -78,15 +76,6 @@ export async function POST(request: Request) {
         },
       }
     )
-    //   .then((res) => {
-    //     console.log(res.data)
-    //   })
-    //   .catch((err) => {
-    //     console.log(err)
-    //   })
-    // console.log('uploaded:')
-
-    // res.status(200).json({ message: '印刷ジョブが正常に送信されました。' })
     return NextResponse.json(
       { message: '印刷ジョブが正常に送信されました。' },
       { status: 200 }
@@ -97,8 +86,5 @@ export async function POST(request: Request) {
       { message: '印刷ジョブの送信中にエラーが発生しました。' },
       { status: 500 }
     )
-    // res
-    //   .status(500)
-    //   .json({ message: '印刷ジョブの送信中にエラーが発生しました。' })
   }
 }

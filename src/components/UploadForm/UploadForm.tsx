@@ -67,6 +67,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
 
     try {
       const formData = new FormData()
+      const timestampData = new FormData()
       if (mode === 'video') {
         formData.append('video', videoFile!)
       } else {
@@ -82,21 +83,31 @@ const UploadForm: React.FC<UploadFormProps> = ({
 
       const timestamp = Date.now()
       formData.append('timestamp', timestamp.toString())
-      await fetch(endpoint, {
+      timestampData.append('timestamp', timestamp.toString())
+      const response = await fetch(endpoint, {
         method: 'POST',
         body: formData,
       })
-      const timestampForm = new FormData()
-      timestampForm.append('timestamp', timestamp.toString())
-      const response = await fetch('/api/print', {
+
+      if (!response.ok) {
+        console.error('処理に失敗しました:', response)
+        alert('処理に失敗しました。')
+        return
+      }
+
+      // /api/print API ルートを呼び出す
+      const printResponse = await fetch('/api/print', {
         method: 'POST',
-        body: timestampForm,
+        // headers: {
+        //   'Content-Type': 'application/json',
+        // },
+        body: timestampData,
       })
 
-      if (response.ok) {
+      if (printResponse.ok) {
         onUploadSuccess()
       } else {
-        console.error('処理に失敗しました:', response)
+        console.error('処理に失敗しました:', printResponse)
         alert('処理に失敗しました。')
       }
     } catch (error) {
