@@ -26,8 +26,8 @@ export const processVideo = async (videoFile: File) => {
       videoData,
       logs
     )
-    let imagePaths: string[] = []
-    let textData: string[] = []
+    const imagePaths: string[] = []
+    const textData: string[] = []
 
     // videoFile.name を一時ファイルに書き込む
     await ffmpeg.writeFile(videoFile.name, new Uint8Array(videoData))

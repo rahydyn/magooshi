@@ -41,8 +41,8 @@ export const processImage = async (
     // レイアウト生成
     const layoutImagePath = await generateLayoutImage(
       imagePaths,
-      texts,
-      timestamp
+      texts
+      //   timestamp
     )
 
     // ストレージにアップロード

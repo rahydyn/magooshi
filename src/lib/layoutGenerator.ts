@@ -3,8 +3,8 @@ import path from 'path'
 
 export const generateLayoutImage = async (
   imagePaths: string[],
-  textData: string[],
-  timestamp: string
+  textData: string[]
+  //   timestamp: string
 ): Promise<string> => {
   try {
     sharp.cache(false)
@@ -70,7 +70,7 @@ export const generateLayoutImage = async (
       process.cwd(),
       'tmp',
       `layout.jpg`
-    //   `${timestamp}_layout.jpg`
+      //   `${timestamp}_layout.jpg`
     )
 
     try {
