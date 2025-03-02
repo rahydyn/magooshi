@@ -12,7 +12,6 @@ export const uploadImageToStorage = async (
     await uploadBytes(storageRef, imageBuffer)
 
     // ダウンロードURLを取得
-    const imageUrl = await getDownloadURL(storageRef)
     // console.log('Uploaded image to:', imageUrl)
   } catch (error) {
     console.error('Error uploading image to storage:', error)
