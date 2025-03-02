@@ -24,6 +24,7 @@ export const processImage = async (
         'tmp',
         `tmp_${timestamp}_${imageFile.name}` // ユニークな一時ファイルパス
       )
+      console.log('tempFilePath', tempFilePath)
       await fs.writeFile(tempFilePath, Buffer.from(buffer))
 
       // 画像ファイルをsharpで処理し、一時ファイルに保存
@@ -32,6 +33,7 @@ export const processImage = async (
         'tmp',
         `processed_${timestamp}_${imageFile.name}` // ユニークな処理後のファイルパス
       )
+      console.log('processedImagePath', processedImagePath)
       await sharp(tempFilePath).toFile(processedImagePath)
 
       // 処理後の画像のパスを imagePaths に格納

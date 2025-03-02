@@ -103,6 +103,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
         // },
         body: timestampData,
       })
+      console.log(printResponse)
 
       if (printResponse.ok) {
         onUploadSuccess()
