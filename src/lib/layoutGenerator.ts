@@ -10,12 +10,17 @@ export const generateLayoutImage = async (
   const imagePositions = [
     { left: 68, top: 322, width: 1254, height: 562 }, // index 0
     { left: 860, top: 1044, width: 472, height: 242 }, // index 1
+    { left: 80, top: 1154, width: 662, height: 352 }, // index 2 のテキスト
+    { left: 80, top: 1539, width: 320, height: 390 }, // index 3 のテキスト
+    { left: 420, top: 1539, width: 320, height: 390 }, // index 4 のテキスト
   ]
 
   // テキストの配置領域
   const textPositions = [
-    { left: 68, top: 184, width: 1254, height: 562, fontSize: 48 }, // index 0 のテキスト
-    { left: 860, top: 1376, width: 472, height: 242, fontSize: 48 }, // index 1 のテキスト
+    { left: 68, top: 184, width: 1254, height: 562, fontSize: 18 }, // index 0 のテキスト
+    { left: 860, top: 1376, width: 472, height: 242, fontSize: 11 }, // index 1 のテキスト
+    { left: 160, top: 1046, width: 510, height: 104, fontSize: 14 }, // index 2 のテキスト
+    { left: 880, top: 1750, width: 432, height: 192, fontSize: 11 }, // index 3 のテキスト
   ]
 
   try {
@@ -29,18 +34,6 @@ export const generateLayoutImage = async (
     let layoutImage = baseImage
 
     for (let i = 0; i < imageUrls.length && i < imagePositions.length; i++) {
-      const topTextBuffer = Buffer.from(
-        `<svg width="${textPositions[i].width}" height="${
-          textPositions[i].height
-        }">
-          <text x="0" y="${textPositions[i].fontSize + 10}" font-size="${
-          textPositions[i].fontSize
-        }" fill="#5b5b5b" font-family="Zen Maru Gothic, sans-serif" textLength="${
-          textPositions[i].width
-        }" lengthAdjust="spacing">${textData[i] || ''}</text>
-        </svg>`
-      )
-
       // Firebase Storage から画像を取得
       const response = await fetch(imageUrls[i])
       const arrayBuffer = await response.arrayBuffer() // ArrayBuffer に変換
@@ -54,19 +47,33 @@ export const generateLayoutImage = async (
       )
 
       const clonedLayoutImage = layoutImage.clone()
-
       const composites = [
         {
           input: await resizedImage.toBuffer(),
           left: imagePositions[i].left,
           top: imagePositions[i].top,
         },
-        {
+      ]
+
+      // i < textPositions.length でテキストを配置するかどうかを判断
+      if (i < textPositions.length) {
+        const topTextBuffer = Buffer.from(
+          `<svg width="${textPositions[i].width}" height="${
+            textPositions[i].height
+          }">
+          <text x="0" y="${textPositions[i].fontSize + 10}" font-size="${
+            textPositions[i].fontSize
+          }" fill="#5b5b5b" font-family="Zen Maru Gothic, sans-serif" textLength="${
+            textPositions[i].width
+          }" lengthAdjust="spacing">${textData[i] || ''}</text>
+        </svg>`
+        )
+        composites.push({
           input: await sharp(topTextBuffer).toBuffer(),
           left: textPositions[i].left,
           top: textPositions[i].top,
-        },
-      ]
+        })
+      }
 
       clonedLayoutImage.composite(composites)
       layoutImage = await sharp(await clonedLayoutImage.toBuffer())

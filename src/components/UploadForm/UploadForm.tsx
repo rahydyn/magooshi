@@ -34,16 +34,20 @@ const UploadForm: React.FC<UploadFormProps> = ({
   handleTextChange,
 }) => {
   const [videoFile, setVideoFile] = useState<File | null>(null)
-  const [isUploadDisabled, setIsUploadDisabled] = useState(true)
+  const [isUploadDisabled, setIsUploadDisabled] = useState(false)
 
   useEffect(() => {
     if (mode === 'video') {
       setIsUploadDisabled(!videoFile)
     } else {
       setIsUploadDisabled(
-        inputSets.some(
-          (set) => !set.imageFile || !set.text || set.text.length > 30
-        )
+        false
+        // inputSets.some(
+        //   (set, index) =>
+        //     !set.imageFile ||
+        //     (!set.text.trim() && index !== 4) ||
+        //     set.text.length > 75
+        // )
       )
     }
   }, [videoFile, inputSets, mode])
@@ -150,20 +154,24 @@ const UploadForm: React.FC<UploadFormProps> = ({
                     }}
                   />
                 </div>
-                <div>
-                  <Label htmlFor={`text-${index}`}>テキスト {index + 1}</Label>
-                  <Textarea
-                    id={`text-${index}`}
-                    value={inputSet.text}
-                    onChange={(e) => handleTextChange(e.target.value, index)}
-                    maxLength={30}
-                  />
-                  {inputSet.text.length > 30 && (
-                    <p className="text-red-500 text-sm">
-                      30文字以内で入力してください。
-                    </p>
-                  )}
-                </div>
+                {index < 4 && ( // index が 4 未満の場合のみテキスト入力欄を表示
+                  <div>
+                    <Label htmlFor={`text-${index}`}>
+                      テキスト {index + 1}
+                    </Label>
+                    <Textarea
+                      id={`text-${index}`}
+                      value={inputSet.text}
+                      onChange={(e) => handleTextChange(e.target.value, index)}
+                      maxLength={75}
+                    />
+                    {inputSet.text.length > 75 && (
+                      <p className="text-red-500 text-sm">
+                        75文字以内で入力してください。
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
               <Button
                 variant="outline"
