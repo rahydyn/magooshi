@@ -1,15 +1,14 @@
-import { NextApiRequest } from 'next'
 import { NextResponse } from 'next/server'
 import axios from 'axios'
 import fs from 'fs/promises'
 import path from 'path'
 
-export async function POST(req: NextApiRequest) {
+export async function POST(request: Request) {
   const clientId = process.env.CLIENT_ID // クライアントID
   const clientSecret = process.env.CLIENT_SECRET // クライアントシークレット
   const printerEmail = process.env.PRINTER_EMAIL // プリンターのメールアドレス
   const host = 'api.epsonconnect.com' // Epson Connect APIのホスト名
-  if (req.method !== 'POST') {
+  if (request.method !== 'POST') {
     return NextResponse.json(
       { message: '印刷ジョブの送信中にエラーが発生しました。' },
       { status: 405 }
@@ -17,14 +16,12 @@ export async function POST(req: NextApiRequest) {
   }
 
   try {
-    console.log(req.body)
-    const timestamp = req.body.timestamp // リクエストボディからタイムスタンプを取得
-    console.log('timestamp:', timestamp)
+    // const formData = await request.formData()
+    // const timestamp = formData.get('timestamp') // リクエストボディからタイムスタンプを取得
 
     // const fileName = `${timestamp}_layout.jpg` // タイムスタンプを含めたファイル名
     const fileName = `layout.jpg` // タイムスタンプを含めたファイル名
     const imagePath = path.join(process.cwd(), 'tmp', fileName) // 画像のパス    console.log('imagePath:', imagePath)
-    console.log(imagePath)
 
     // 1. 認証
     const authResponse = await axios.post(
